@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Doug's YouTube - Ad Skip Mode</title>
+<title>Doug's YouTube</title>
 
 <style>
   :root{--bg:#0f1724;--card:#0b1220;--accent:#ff0066;--muted:#94a3b8;color-scheme:dark}
@@ -15,8 +15,13 @@
     box-sizing:border-box;
   }
 
-  .layout{display:flex;gap:20px;}
+  .layout{
+    display:flex;
+    gap:20px;
+  }
+
   .left{ flex:3; }
+
   .right{
     flex:2;
     background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
@@ -33,8 +38,17 @@
     box-shadow:0 6px 30px rgba(2,6,23,0.6);
   }
 
-  .player-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;background:#000;}
-  #player{position:absolute;top:0;left:0;width:100%;height:100%;}
+  .player-wrap{
+    position:relative;
+    padding-bottom:56.25%;
+    height:0;
+    overflow:hidden;
+    border-radius:8px;
+    background:#000;
+  }
+  #player{
+    position:absolute;top:0;left:0;width:100%;height:100%;
+  }
 
   input[type="text"], input[type="range"]{
     background:transparent;
@@ -43,6 +57,7 @@
     border-radius:8px;
     color:inherit;
   }
+
   button{
     background:rgba(255,255,255,0.03);
     border:none;
@@ -51,11 +66,37 @@
     color:inherit;
     cursor:pointer;
   }
-  .big-btn{padding:10px 14px;font-weight:600;}
-  .controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:center}
-  .video-item{display:flex;gap:10px;margin-bottom:10px;cursor:pointer;background:#111a2a;border-radius:8px;padding:10px;transition:0.2s;}
-  .video-item:hover{background:#1b2741;}
-  .video-item img{width:120px;border-radius:6px;}
+
+  .big-btn{
+    padding:10px 14px;
+    font-weight:600;
+  }
+
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:12px;
+    align-items:center
+  }
+
+  .video-item{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+    cursor:pointer;
+    background:#111a2a;
+    border-radius:8px;
+    padding:10px;
+    transition:0.2s;
+  }
+  .video-item:hover{
+    background:#1b2741;
+  }
+  .video-item img{
+    width:120px;
+    border-radius:6px;
+  }
 </style>
 </head>
 
@@ -117,11 +158,6 @@
 <script>
 /* ---------- PLAYER CODE ---------- */
 
-let player = null;
-let updateTimer = null;
-let lastTime = 0;
-let currentVideoId = '';
-
 function extractVideoId(input){
   if(!input) return null;
   input=input.trim();
@@ -141,72 +177,89 @@ function extractVideoId(input){
   return null;
 }
 
+let player=null;
+let updateTimer=null;
+let lastTime = 0;
+
 function onYouTubeIframeAPIReady(){
-  player = new YT.Player('player',{
-    videoId: '',
+  player=new YT.Player('player',{
+    videoId:'',
     host: 'https://www.youtube-nocookie.com',
-    playerVars: {playsinline:1,rel:0,modestbranding:1},
-    events: {onReady:onPlayerReady, onStateChange:onStateChange}
+    playerVars:{playsinline:1,rel:0,showinfo:0,modestbranding:1},
+    events:{onReady:onPlayerReady,onStateChange:onPlayerStateChange}
   });
 }
 
 function onPlayerReady(){
-  loadBtn.onclick = () => {
-    const id = extractVideoId(videoInput.value);
-    if(!id) return alert("Couldn't read video ID.");
-    currentVideoId = id;
-    player.loadVideoById(id);
-  };
-
-  playBtn.onclick = ()=>player.playVideo();
-  pauseBtn.onclick = ()=>player.pauseVideo();
-  rewBtn.onclick = ()=>seekBy(-10);
-  fwdBtn.onclick = ()=>seekBy(10);
-  volume.oninput = e=>player.setVolume(e.target.value);
-  seek.oninput = onSeekInput;
-  fsBtn.onclick = toggleFullscreen;
-
-  updateTimer = setInterval(updateUI, 500);
-
-  // Track lastTime continuously
-  setInterval(()=>{
-    if(player && player.getPlayerState()===YT.PlayerState.PLAYING){
-      lastTime = player.getCurrentTime();
-    }
-  }, 250);
+  loadBtn.onclick=loadFromInput;
+  playBtn.onclick=()=>player.playVideo();
+  pauseBtn.onclick=()=>player.pauseVideo();
+  rewBtn.onclick=()=>seekBy(-10);
+  fwdBtn.onclick=()=>seekBy(10);
+  volume.oninput=e=>player.setVolume(e.target.value);
+  seek.oninput=onSeekInput;
+  fsBtn.onclick=toggleFullscreen;
+  updateTimer=setInterval(updateUI,500);
 }
 
-function onStateChange(event){
-  // Ad skip logic: if paused unexpectedly, reload video at lastTime
-  if((event.data===YT.PlayerState.PAUSED || event.data===YT.PlayerState.BUFFERING) && lastTime>0){
-    player.loadVideoById({videoId: currentVideoId, startSeconds: lastTime});
+function onPlayerStateChange(event){
+  // Track last normal playback time
+  if(event.data === YT.PlayerState.PLAYING){
+    const dur = player.getDuration()||0;
+    const cur = player.getCurrentTime()||0;
+
+    // If ad detected (very short duration), skip to last time
+    if(dur > 0 && dur < 5){
+      player.seekTo(lastTime, true);
+    } else {
+      lastTime = cur;
+    }
   }
 }
 
-function loadFromInput(){ const id = extractVideoId(videoInput.value); if(!id) return alert("Couldn't read video ID."); player.loadVideoById(id); }
-function seekBy(s){ player.seekTo(Math.max(0,player.getCurrentTime()+s),true); }
-function onSeekInput(e){ player.seekTo(player.getDuration()*(e.target.value/100),true); }
+function loadFromInput(){
+  const raw=videoInput.value;
+  const id=extractVideoId(raw);
+  if(!id) return alert("Couldn't read video ID.");
+  player.loadVideoById(id);
+}
+
+function seekBy(s){
+  player.seekTo(Math.max(0,player.getCurrentTime()+s),true);
+}
+
+function onSeekInput(e){
+  player.seekTo(player.getDuration()*(e.target.value/100),true);
+}
+
 function updateUI(){
   if(!player) return;
-  const dur = player.getDuration()||0;
-  const cur = player.getCurrentTime()||0;
+  const dur=player.getDuration()||0;
+  const cur=player.getCurrentTime()||0;
   seek.value = dur?Math.round((cur/dur)*100):0;
-  current.textContent = formatTime(cur);
-  duration.textContent = formatTime(dur);
-  volume.value = player.getVolume();
+  current.textContent=formatTime(cur);
+  duration.textContent=formatTime(dur);
+  volume.value=player.getVolume();
 }
-function formatTime(s){ s=Math.max(0,Math.floor(s||0)); return Math.floor(s/60)+":"+(s%60<10?"0":"")+(s%60); }
-function toggleFullscreen(){ const el=document.querySelector('.player-wrap'); if(!document.fullscreenElement) el.requestFullscreen(); else document.exitFullscreen(); }
 
-/* ---------- CREATOR SEARCH ---------- */
+function formatTime(s){
+  s=Math.max(0,Math.floor(s||0));
+  return Math.floor(s/60)+":"+(s%60<10?"0":"")+(s%60);
+}
 
+function toggleFullscreen(){
+  const el=document.querySelector('.player-wrap');
+  if(!document.fullscreenElement) el.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+/* ---------- CREATOR SEARCH (Full Playlist) ---------- */
 const API_KEY = "AIzaSyDq9mq1cUuXpkE38juZiYJIDpg0oK8eVno";
 
 async function searchCreator(){
   const name = creatorName.value.trim();
   if(!name) return alert("Enter a creator name.");
 
-  // Find channel
   const channelRes = await fetch(
     `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(name)}&key=${API_KEY}`
   );
@@ -215,14 +268,12 @@ async function searchCreator(){
 
   const channelId = channelData.items[0].id.channelId;
 
-  // Get uploads playlist
   const detailRes = await fetch(
     `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${API_KEY}`
   );
   const detailData = await detailRes.json();
   const uploadsPlaylistId = detailData.items[0].contentDetails.relatedPlaylists.uploads;
 
-  // Fetch all videos
   let videos = [];
   let nextPage = "";
 
@@ -242,10 +293,12 @@ async function searchCreator(){
 function displayVideos(videos){
   const list=document.getElementById("videoList");
   list.innerHTML="";
+
   videos.forEach(v=>{
     const vid = v.snippet.resourceId.videoId;
     const title = v.snippet.title;
     const thumb = v.snippet.thumbnails.medium.url;
+
     const item=document.createElement("div");
     item.className="video-item";
     item.onclick=()=>player.loadVideoById(vid);
