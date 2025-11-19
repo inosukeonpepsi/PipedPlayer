@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Doug's YouTube (Piped Edition)</title>
+<title>Doug's YouTube (Yewtu.be Edition)</title>
 
 <style>
   :root{--bg:#0f1724;--card:#0b1220;--accent:#ff0066;--muted:#94a3b8;color-scheme:dark}
@@ -108,8 +108,8 @@
   <!-- LEFT SIDE -->
   <div class="left">
     <div class="card">
-      <h1>Doug's Piped Player</h1>
-      <p class="lead">Loads with Piped (No Ads)</p>
+      <h1>Doug's Yewtu.be Player</h1>
+      <p class="lead">Loads with Yewtu.be (Invidious, ad-free)</p>
 
       <div class="flex" style="display:flex;gap:10px;margin-bottom:10px">
         <input id="videoInput" type="text" placeholder="YouTube URL or ID" style="flex:1" />
@@ -153,7 +153,7 @@
 <script>
 
 /* -------------------------
-      ALWAYS USE PIPED
+      ALWAYS USE Yewtu.be
 -------------------------- */
 
 function extractVideoId(input){
@@ -177,25 +177,25 @@ function extractVideoId(input){
   return null;
 }
 
-function loadPiped(id){
+function loadYewtube(id){
   const iframe = document.getElementById("player");
-  iframe.src = `https://piped.video/embed/${id}`;
+  iframe.src = `https://yewtu.be/embed/${id}`;
 }
 
 /* Load button */
 document.getElementById("loadBtn").onclick = () => {
   const id = extractVideoId(videoInput.value);
   if(!id) return alert("Invalid URL");
-  loadPiped(id);
+  loadYewtube(id);
 };
 
-/* Clicking a video in list loads Piped */
+/* Clicking a video loads Yewtu.be */
 function playVideoFromList(id){
-  loadPiped(id);
+  loadYewtube(id);
 }
 
 /* -------------------------
-      SEARCH CREATOR
+      CREATOR SEARCH
 -------------------------- */
 
 const API_KEY = "AIzaSyDq9mq1cUuXpkE38juZiYJIDpg0oK8eVno";
@@ -249,7 +249,7 @@ function displayVideos(videos){
 
     const el=document.createElement("div");
     el.className="video-item";
-    el.onclick=()=>loadPiped(id);
+    el.onclick=()=>loadYewtube(id);
     el.innerHTML=`
       <img src="${thumb}">
       <div><strong>${title}</strong></div>
