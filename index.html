@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Doug's YouTube (Yewtu.be Edition)</title>
+<title>Doug's YouTube (Invidious Embed)</title>
 
 <style>
   :root{--bg:#0f1724;--card:#0b1220;--accent:#ff0066;--muted:#94a3b8;color-scheme:dark}
@@ -15,89 +15,21 @@
     box-sizing:border-box;
   }
 
-  .layout{
-    display:flex;
-    gap:20px;
-  }
-
-  .left{ flex:3; }
-
-  .right{
-    flex:2;
-    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-    border-radius:12px;
-    padding:16px;
-    max-height:90vh;
-    overflow-y:auto;
-  }
-
-  .card{
-    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border-radius:12px;
-    padding:18px;
-    box-shadow:0 6px 30px rgba(2,6,23,0.6);
-  }
-
-  .player-wrap{
-    position:relative;
-    padding-bottom:56.25%;
-    height:0;
-    overflow:hidden;
-    border-radius:8px;
-    background:#000;
-  }
-  #player{
-    position:absolute;top:0;left:0;width:100%;height:100%;
-    border:none;
-  }
-
-  input[type="text"], input[type="range"]{
-    background:transparent;
-    border:1px solid rgba(255,255,255,0.06);
-    padding:8px 10px;
-    border-radius:8px;
-    color:inherit;
-  }
-
-  button{
-    background:rgba(255,255,255,0.03);
-    border:none;
-    padding:8px 12px;
-    border-radius:8px;
-    color:inherit;
-    cursor:pointer;
-  }
-
-  .big-btn{
-    padding:10px 14px;
-    font-weight:600;
-  }
-
-  .controls{
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-    margin-top:12px;
-    align-items:center
-  }
-
-  .video-item{
-    display:flex;
-    gap:10px;
-    margin-bottom:10px;
-    cursor:pointer;
-    background:#111a2a;
-    border-radius:8px;
-    padding:10px;
-    transition:0.2s;
-  }
-  .video-item:hover{
-    background:#1b2741;
-  }
-  .video-item img{
-    width:120px;
-    border-radius:6px;
-  }
+  .layout{display:flex;gap:20px;}
+  .left{flex:3;}
+  .right{flex:2;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));border-radius:12px;padding:16px;max-height:90vh;overflow-y:auto;}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:18px;box-shadow:0 6px 30px rgba(2,6,23,0.6);}
+  .player-wrap{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;background:#000;}
+  #player{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+  input[type="text"], input[type="range"]{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:inherit}
+  button{background:rgba(255,255,255,0.03);border:none;padding:8px 12px;border-radius:8px;color:inherit;cursor:pointer}
+  .big-btn{padding:10px 14px;font-weight:600}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:center}
+  .video-item{display:flex;gap:10px;margin-bottom:10px;cursor:pointer;background:#111a2a;border-radius:8px;padding:10px;transition:0.2s}
+  .video-item:hover{background:#1b2741}
+  .video-item img{width:120px;border-radius:6px}
+  .muted{color:var(--muted)}
+  .note{font-size:13px;color:var(--muted);margin-top:8px}
 </style>
 </head>
 
@@ -108,30 +40,38 @@
   <!-- LEFT SIDE -->
   <div class="left">
     <div class="card">
-      <h1>Doug's Yewtu.be Player</h1>
-      <p class="lead">Loads with Yewtu.be (Invidious, ad-free)</p>
+      <h1>Doug's Player (Invidious)</h1>
+      <p class="lead">Paste a YouTube URL/ID below and press <strong>Load</strong>. Videos load via an Invidious instance (embed-friendly, ad-free).</p>
 
       <div class="flex" style="display:flex;gap:10px;margin-bottom:10px">
         <input id="videoInput" type="text" placeholder="YouTube URL or ID" style="flex:1" />
         <button id="loadBtn" class="big-btn">Load</button>
       </div>
 
-      <div class="player-wrap">
-        <iframe id="player"></iframe>
-      </div>
+      <div class="player-wrap"><iframe id="player" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
 
       <div class="controls">
-        <button id="playBtn">Play</button>
-        <button id="pauseBtn">Pause</button>
-        <button id="rewBtn">« 10s</button>
-        <button id="fwdBtn">10s »</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="playBtn">Play</button>
+          <button id="pauseBtn">Pause</button>
+          <button id="rewBtn">« 10s</button>
+          <button id="fwdBtn">10s »</button>
+        </div>
 
-        <input id="seek" type="range" min="0" max="100" value="0" />
+        <div style="flex:1;min-width:220px;display:flex;align-items:center;gap:8px">
+          <input id="seek" type="range" min="0" max="100" value="0" style="flex:1" />
+          <div class="time"><span id="current">-:--</span> / <span id="duration">-:--</span></div>
+        </div>
 
-        <label for="volume">Vol</label>
-        <input id="volume" class="volume" type="range" min="0" max="100" value="100" />
+        <div style="display:flex;align-items:center;gap:8px">
+          <label for="volume">Vol</label>
+          <input id="volume" class="volume" type="range" min="0" max="100" value="100" />
+          <button id="openBtn">Open on Invidious</button>
+        </div>
+      </div>
 
-        <button id="fsBtn">Fullscreen</button>
+      <div class="note">
+        Note: iframe playback is controlled by Invidious. The on-page play/pause/seek UI cannot reliably control the embedded player due to cross-origin iframe restrictions. Use <em>Open on Invidious</em> to get full controls in a new tab.
       </div>
     </div>
   </div>
@@ -141,124 +81,156 @@
     <h2>Search Creator Videos</h2>
     <div style="display:flex;gap:10px;margin-bottom:10px">
       <input id="creatorName" type="text" placeholder="Enter creator name..." style="flex:1" />
-      <button onclick="searchCreator()">Search</button>
+      <button id="searchBtn" class="big-btn">Search</button>
     </div>
 
     <h3>Videos</h3>
     <div id="videoList"></div>
+    <div class="muted note">Search uses the YouTube Data API (your key). Playback uses an Invidious instance that is ad-free.</div>
   </div>
 
 </div>
 
 <script>
+/* -------------------------
+   Configuration / Instance
+   -------------------------
+   We're using an embed-friendly Invidious instance here.
+   If this instance ever blocks embedding, swap to one that allows /embed/.
+*/
+const INVIDIOUS_BASE = "https://inv.vern.cc"; // embed-friendly Invidious instance
+const API_KEY = "AIzaSyDq9mq1cUuXpkE38juZiYJIDpg0oK8eVno"; // your YouTube Data API key
 
 /* -------------------------
-      ALWAYS USE Yewtu.be
--------------------------- */
-
+   Helpers
+--------------------------*/
 function extractVideoId(input){
   if(!input) return null;
-  input=input.trim();
-  const idRegex=/^[a-zA-Z0-9_-]{6,}$/;
-
+  input = input.trim();
+  const idRegex = /^[a-zA-Z0-9_-]{6,}$/;
   if(idRegex.test(input)) return input;
 
   try{
-    const url=new URL(input.startsWith("http") ? input : "https://" + input);
+    const url = new URL(input.startsWith("http") ? input : "https://" + input);
+    if(url.hostname.includes("youtu.be")) return url.pathname.slice(1);
+    if(url.searchParams.has("v")) return url.searchParams.get("v");
+  } catch(e) { /* ignore */ }
 
-    if(url.hostname.includes("youtu.be"))
-      return url.pathname.slice(1);
-
-    if(url.searchParams.has("v"))
-      return url.searchParams.get("v");
-
-  }catch{}
-
-  return null;
-}
-
-function loadYewtube(id){
-  const iframe = document.getElementById("player");
-  iframe.src = `https://yewtu.be/embed/${id}`;
-}
-
-/* Load button */
-document.getElementById("loadBtn").onclick = () => {
-  const id = extractVideoId(videoInput.value);
-  if(!id) return alert("Invalid URL");
-  loadYewtube(id);
-};
-
-/* Clicking a video loads Yewtu.be */
-function playVideoFromList(id){
-  loadYewtube(id);
+  // fallback regex
+  const m = input.match(/v=([a-zA-Z0-9_-]{6,})/) || input.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
+  return m ? m[1] : null;
 }
 
 /* -------------------------
-      CREATOR SEARCH
--------------------------- */
+   Player (loads Invidious embed)
+--------------------------*/
+const playerIframe = document.getElementById("player");
 
-const API_KEY = "AIzaSyDq9mq1cUuXpkE38juZiYJIDpg0oK8eVno";
+function loadInvidious(videoId, autoplay = true){
+  // build embed URL
+  // autoplay=1 parameter for many instances; if not supported it will be ignored
+  const src = `${INVIDIOUS_BASE}/embed/${videoId}${autoplay ? "?autoplay=1" : ""}`;
+  playerIframe.src = src;
+  // store current for open button
+  playerIframe.dataset.videoId = videoId;
+  // update time placeholders
+  document.getElementById('current').textContent = '-:--';
+  document.getElementById('duration').textContent = '-:--';
+}
 
+/* Wire load button */
+document.getElementById('loadBtn').addEventListener('click', () => {
+  const id = extractVideoId(document.getElementById('videoInput').value);
+  if(!id) return alert("Couldn't read a YouTube video ID from that input.");
+  loadInvidious(id, true);
+});
+
+/* Open on Invidious button (full controls) */
+document.getElementById('openBtn').addEventListener('click', () => {
+  const vid = playerIframe.dataset.videoId;
+  if(!vid) return alert('No video loaded');
+  window.open(`${INVIDIOUS_BASE}/watch?v=${vid}`, '_blank');
+});
+
+/* The on-page controls cannot reliably control the embedded Invidious iframe (cross-origin).
+   We'll show a helpful message when someone clicks them so they understand.
+*/
+function controlsUnavailableNotice(){
+  alert("Playback controls are handled by the embedded Invidious player. Click 'Open on Invidious' to control playback (seek, quality, subtitles, etc.).");
+}
+document.getElementById('playBtn').addEventListener('click', controlsUnavailableNotice);
+document.getElementById('pauseBtn').addEventListener('click', controlsUnavailableNotice);
+document.getElementById('rewBtn').addEventListener('click', controlsUnavailableNotice);
+document.getElementById('fwdBtn').addEventListener('click', controlsUnavailableNotice);
+document.getElementById('seek').addEventListener('input', () => {
+  const v = document.getElementById('seek').value;
+  // UI-only: reflect value but cannot send to iframe
+  document.getElementById('current').textContent = `~${v}%`;
+  alert("Seeking inside embedded Invidious player isn't available from this page. Use 'Open on Invidious'.");
+});
+document.getElementById('volume').addEventListener('input', () => {
+  alert("Volume of the embedded player cannot be changed from this page due to browser security. Use 'Open on Invidious'.");
+});
+
+/* -------------------------
+   Creator search -> list videos
+--------------------------*/
 async function searchCreator(){
-  const name = creatorName.value.trim();
-  if(!name) return alert("Enter a name.");
+  const name = document.getElementById('creatorName').value.trim();
+  if(!name) return alert("Enter a creator name.");
 
-  const chanRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(name)}&key=${API_KEY}`
-  );
-  const chanData = await chanRes.json();
+  // 1) Search channels
+  const chRes = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(name)}&key=${API_KEY}`);
+  const chData = await chRes.json();
+  if(!chData.items?.length) return alert("No channel found.");
 
-  if(!chanData.items?.length) return alert("No channel found");
+  const channelId = chData.items[0].id.channelId;
 
-  const channelId = chanData.items[0].id.channelId;
+  // 2) Get uploads playlist ID
+  const detRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${API_KEY}`);
+  const detData = await detRes.json();
+  const uploadsPlaylistId = detData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+  if(!uploadsPlaylistId) return alert("Couldn't find uploads playlist for that channel.");
 
-  const detailsRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${API_KEY}`
-  );
-  const detailsData = await detailsRes.json();
-
-  const playlistId = detailsData.items[0].contentDetails.relatedPlaylists.uploads;
-
+  // 3) Fetch all videos from uploads playlist (page through)
   let videos = [];
-  let next = "";
-
+  let nextPage = "";
   while(true){
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=50&pageToken=${next}&key=${API_KEY}`
-    );
-    const data = await res.json();
-
+    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=50&pageToken=${nextPage}&key=${API_KEY}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    if(!data.items) break;
     videos.push(...data.items);
-
     if(!data.nextPageToken) break;
-    next = data.nextPageToken;
+    nextPage = data.nextPageToken;
   }
 
   displayVideos(videos);
 }
 
+/* hook up search button */
+document.getElementById('searchBtn').addEventListener('click', searchCreator);
+
+/* Display list */
 function displayVideos(videos){
-  const box = document.getElementById("videoList");
-  box.innerHTML="";
+  const list = document.getElementById('videoList');
+  list.innerHTML = "";
 
-  videos.forEach(v=>{
-    const id = v.snippet.resourceId.videoId;
-    const thumb = v.snippet.thumbnails.medium.url;
+  videos.forEach(v => {
+    const vid = v.snippet.resourceId?.videoId || v.snippet?.videoId;
     const title = v.snippet.title;
-
-    const el=document.createElement("div");
-    el.className="video-item";
-    el.onclick=()=>loadYewtube(id);
-    el.innerHTML=`
-      <img src="${thumb}">
-      <div><strong>${title}</strong></div>
-    `;
-    box.appendChild(el);
+    const thumb = v.snippet.thumbnails?.medium?.url || v.snippet.thumbnails?.default?.url || '';
+    const el = document.createElement('div');
+    el.className = 'video-item';
+    el.innerHTML = `<img src="${thumb}" alt=""><div><strong>${escapeHtml(title)}</strong></div>`;
+    el.addEventListener('click', () => loadInvidious(vid, true));
+    list.appendChild(el);
   });
 }
 
-</script>
+/* small helper */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
+</script>
 </body>
 </html>
