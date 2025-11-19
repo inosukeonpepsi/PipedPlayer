@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Doug's YouTube (Piped Edition)</title>
+
+<style>
+  :root{--bg:#0f1724;--card:#0b1220;--accent:#ff0066;--muted:#94a3b8;color-scheme:dark}
+  html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial}
+  body{
+    background:linear-gradient(180deg,#071026 0%, #071020 60%);
+    color:#e6eef8;
+    padding:24px;
+    box-sizing:border-box;
+  }
+
+  .layout{
+    display:flex;
+    gap:20px;
+  }
+
+  .left{ flex:3; }
+
+  .right{
+    flex:2;
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border-radius:12px;
+    padding:16px;
+    max-height:90vh;
+    overflow-y:auto;
+  }
+
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 6px 30px rgba(2,6,23,0.6);
+  }
+
+  .player-wrap{
+    position:relative;
+    padding-bottom:56.25%;
+    height:0;
+    overflow:hidden;
+    border-radius:8px;
+    background:#000;
+  }
+  #player{
+    position:absolute;top:0;left:0;width:100%;height:100%;
+    border:none;
+  }
+
+  input[type="text"], input[type="range"]{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.06);
+    padding:8px 10px;
+    border-radius:8px;
+    color:inherit;
+  }
+
+  button{
+    background:rgba(255,255,255,0.03);
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    color:inherit;
+    cursor:pointer;
+  }
+
+  .big-btn{
+    padding:10px 14px;
+    font-weight:600;
+  }
+
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:12px;
+    align-items:center
+  }
+
+  .video-item{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+    cursor:pointer;
+    background:#111a2a;
+    border-radius:8px;
+    padding:10px;
+    transition:0.2s;
+  }
+  .video-item:hover{
+    background:#1b2741;
+  }
+  .video-item img{
+    width:120px;
+    border-radius:6px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="layout">
+
+  <!-- LEFT SIDE -->
+  <div class="left">
+    <div class="card">
+      <h1>Doug's Piped Player</h1>
+      <p class="lead">Loads with Piped (No Ads)</p>
+
+      <div class="flex" style="display:flex;gap:10px;margin-bottom:10px">
+        <input id="videoInput" type="text" placeholder="YouTube URL or ID" style="flex:1" />
+        <button id="loadBtn" class="big-btn">Load</button>
+      </div>
+
+      <div class="player-wrap">
+        <iframe id="player"></iframe>
+      </div>
+
+      <div class="controls">
+        <button id="playBtn">Play</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="rewBtn">« 10s</button>
+        <button id="fwdBtn">10s »</button>
+
+        <input id="seek" type="range" min="0" max="100" value="0" />
+
+        <label for="volume">Vol</label>
+        <input id="volume" class="volume" type="range" min="0" max="100" value="100" />
+
+        <button id="fsBtn">Fullscreen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE -->
+  <div class="right">
+    <h2>Search Creator Videos</h2>
+    <div style="display:flex;gap:10px;margin-bottom:10px">
+      <input id="creatorName" type="text" placeholder="Enter creator name..." style="flex:1" />
+      <button onclick="searchCreator()">Search</button>
+    </div>
+
+    <h3>Videos</h3>
+    <div id="videoList"></div>
+  </div>
+
+</div>
+
+<script>
+
+/* -------------------------
+      ALWAYS USE PIPED
+-------------------------- */
+
+function extractVideoId(input){
+  if(!input) return null;
+  input=input.trim();
+  const idRegex=/^[a-zA-Z0-9_-]{6,}$/;
+
+  if(idRegex.test(input)) return input;
+
+  try{
+    const url=new URL(input.startsWith("http") ? input : "https://" + input);
+
+    if(url.hostname.includes("youtu.be"))
+      return url.pathname.slice(1);
+
+    if(url.searchParams.has("v"))
+      return url.searchParams.get("v");
+
+  }catch{}
+
+  return null;
+}
+
+function loadPiped(id){
+  const iframe = document.getElementById("player");
+  iframe.src = `https://piped.video/embed/${id}`;
+}
+
+/* Load button */
+document.getElementById("loadBtn").onclick = () => {
+  const id = extractVideoId(videoInput.value);
+  if(!id) return alert("Invalid URL");
+  loadPiped(id);
+};
+
+/* Clicking a video in list loads Piped */
+function playVideoFromList(id){
+  loadPiped(id);
+}
+
+/* -------------------------
+      SEARCH CREATOR
+-------------------------- */
+
+const API_KEY = "AIzaSyDq9mq1cUuXpkE38juZiYJIDpg0oK8eVno";
+
+async function searchCreator(){
+  const name = creatorName.value.trim();
+  if(!name) return alert("Enter a name.");
+
+  const chanRes = await fetch(
+    `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(name)}&key=${API_KEY}`
+  );
+  const chanData = await chanRes.json();
+
+  if(!chanData.items?.length) return alert("No channel found");
+
+  const channelId = chanData.items[0].id.channelId;
+
+  const detailsRes = await fetch(
+    `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${API_KEY}`
+  );
+  const detailsData = await detailsRes.json();
+
+  const playlistId = detailsData.items[0].contentDetails.relatedPlaylists.uploads;
+
+  let videos = [];
+  let next = "";
+
+  while(true){
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=50&pageToken=${next}&key=${API_KEY}`
+    );
+    const data = await res.json();
+
+    videos.push(...data.items);
+
+    if(!data.nextPageToken) break;
+    next = data.nextPageToken;
+  }
+
+  displayVideos(videos);
+}
+
+function displayVideos(videos){
+  const box = document.getElementById("videoList");
+  box.innerHTML="";
+
+  videos.forEach(v=>{
+    const id = v.snippet.resourceId.videoId;
+    const thumb = v.snippet.thumbnails.medium.url;
+    const title = v.snippet.title;
+
+    const el=document.createElement("div");
+    el.className="video-item";
+    el.onclick=()=>loadPiped(id);
+    el.innerHTML=`
+      <img src="${thumb}">
+      <div><strong>${title}</strong></div>
+    `;
+    box.appendChild(el);
+  });
+}
+
+</script>
+
+</body>
+</html>
